@@ -386,6 +386,170 @@ members.</p>
 <p>Since the annual membership is the most profitable, the company’s
 director of marketing suggests that increasing the number of annual
 memberships is key to future growth.</p>
+<p>The data used for the analysis are taken from <a href="https://divvy-tripdata.s3.amazonaws.com/index.html">divvy-tripdata</a>
+opensource data. The use of these data is licensed under this <a href="https://www.divvybikes.com/data-license-agreement">license</a>.</p>
+<div id="data-cleaning" class="section level2">
+<h2>Data cleaning</h2>
+<p>Loading esseantial libraries:</p>
+<pre class="r"><code>library(&quot;tidyverse&quot;)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<p>To perform the required analysis I’m going to be using the data from
+the last 4 quarters; Q2, Q3 and Q4 of 2019 and Q1 of 2020.</p>
+<pre class="r"><code>Q2_2019 &lt;- 
+  read_csv(&#39;C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q2.csv&#39;,
+           show_col_types = FALSE)
+Q3_2019 &lt;- 
+  read_csv(&#39;C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q3.csv&#39;,
+           show_col_types = FALSE)
+Q4_2019 &lt;- 
+  read_csv(&#39;C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q4.csv&#39;,
+           show_col_types = FALSE)
+Q1_2020 &lt;- 
+  read_csv(&#39;C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2020_Q1.csv&#39;,
+           show_col_types = FALSE)</code></pre>
+<p>Let’s start to clean data. Since we have to work with four different
+files it is first important to have consistent column namings. We can
+check how are the columns named in each file running these commands</p>
+<pre class="r"><code>colnames(Q2_2019)
+colnames(Q3_2019)
+colnames(Q4_2019)
+colnames(Q1_2020)</code></pre>
+<p>The files do not have all the same columns but they share a total of
+nine columns. These are the columns we are going to merge and they need
+to have the same exact name. The shared columns are: <em>ride_id,
+rideable_type, started_at, ended_at, start_station_name,</em>
+<em>start_station_id, end_station_name, end_station_id</em> and
+<em>member_casual</em>, following the namings used in Q1_2020.</p>
+<pre class="r"><code>str(Q1_2020)</code></pre>
+<pre><code>## spec_tbl_df [426,887 × 13] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ride_id           : chr [1:426887] &quot;EACB19130B0CDA4A&quot; &quot;8FED874C809DC021&quot; &quot;789F3C21E472CA96&quot; &quot;C9A388DAC6ABF313&quot; ...
+##  $ rideable_type     : chr [1:426887] &quot;docked_bike&quot; &quot;docked_bike&quot; &quot;docked_bike&quot; &quot;docked_bike&quot; ...
+##  $ started_at        : POSIXct[1:426887], format: &quot;2020-01-21 20:06:59&quot; &quot;2020-01-30 14:22:39&quot; ...
+##  $ ended_at          : POSIXct[1:426887], format: &quot;2020-01-21 20:14:30&quot; &quot;2020-01-30 14:26:22&quot; ...
+##  $ start_station_name: chr [1:426887] &quot;Western Ave &amp; Leland Ave&quot; &quot;Clark St &amp; Montrose Ave&quot; &quot;Broadway &amp; Belmont Ave&quot; &quot;Clark St &amp; Randolph St&quot; ...
+##  $ start_station_id  : num [1:426887] 239 234 296 51 66 212 96 96 212 38 ...
+##  $ end_station_name  : chr [1:426887] &quot;Clark St &amp; Leland Ave&quot; &quot;Southport Ave &amp; Irving Park Rd&quot; &quot;Wilton Ave &amp; Belmont Ave&quot; &quot;Fairbanks Ct &amp; Grand Ave&quot; ...
+##  $ end_station_id    : num [1:426887] 326 318 117 24 212 96 212 212 96 100 ...
+##  $ start_lat         : num [1:426887] 42 42 41.9 41.9 41.9 ...
+##  $ start_lng         : num [1:426887] -87.7 -87.7 -87.6 -87.6 -87.6 ...
+##  $ end_lat           : num [1:426887] 42 42 41.9 41.9 41.9 ...
+##  $ end_lng           : num [1:426887] -87.7 -87.7 -87.7 -87.6 -87.6 ...
+##  $ member_casual     : chr [1:426887] &quot;member&quot; &quot;member&quot; &quot;member&quot; &quot;member&quot; ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   ride_id = col_character(),
+##   ..   rideable_type = col_character(),
+##   ..   started_at = col_datetime(format = &quot;&quot;),
+##   ..   ended_at = col_datetime(format = &quot;&quot;),
+##   ..   start_station_name = col_character(),
+##   ..   start_station_id = col_double(),
+##   ..   end_station_name = col_character(),
+##   ..   end_station_id = col_double(),
+##   ..   start_lat = col_double(),
+##   ..   start_lng = col_double(),
+##   ..   end_lat = col_double(),
+##   ..   end_lng = col_double(),
+##   ..   member_casual = col_character()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code>str(Q4_2019)</code></pre>
+<pre><code>## spec_tbl_df [704,054 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ride_id           : num [1:704054] 25223640 25223641 25223642 25223643 25223644 ...
+##  $ started_at        : POSIXct[1:704054], format: &quot;2019-10-01 00:01:39&quot; &quot;2019-10-01 00:02:16&quot; ...
+##  $ ended_at          : POSIXct[1:704054], format: &quot;2019-10-01 00:17:20&quot; &quot;2019-10-01 00:06:34&quot; ...
+##  $ rideable_type     : num [1:704054] 2215 6328 3003 3275 5294 ...
+##  $ tripduration      : num [1:704054] 940 258 850 2350 1867 ...
+##  $ start_station_id  : num [1:704054] 20 19 84 313 210 156 84 156 156 336 ...
+##  $ start_station_name: chr [1:704054] &quot;Sheffield Ave &amp; Kingsbury St&quot; &quot;Throop (Loomis) St &amp; Taylor St&quot; &quot;Milwaukee Ave &amp; Grand Ave&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; ...
+##  $ end_station_id    : num [1:704054] 309 241 199 290 382 226 142 463 463 336 ...
+##  $ end_station_name  : chr [1:704054] &quot;Leavitt St &amp; Armitage Ave&quot; &quot;Morgan St &amp; Polk St&quot; &quot;Wabash Ave &amp; Grand Ave&quot; &quot;Kedzie Ave &amp; Palmer Ct&quot; ...
+##  $ member_casual     : chr [1:704054] &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; ...
+##  $ gender            : chr [1:704054] &quot;Male&quot; &quot;Male&quot; &quot;Female&quot; &quot;Male&quot; ...
+##  $ birthyear         : num [1:704054] 1987 1998 1991 1990 1987 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   trip_id = col_double(),
+##   ..   start_time = col_datetime(format = &quot;&quot;),
+##   ..   end_time = col_datetime(format = &quot;&quot;),
+##   ..   bikeid = col_double(),
+##   ..   tripduration = col_number(),
+##   ..   from_station_id = col_double(),
+##   ..   from_station_name = col_character(),
+##   ..   to_station_id = col_double(),
+##   ..   to_station_name = col_character(),
+##   ..   usertype = col_character(),
+##   ..   gender = col_character(),
+##   ..   birthyear = col_double()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code>str(Q3_2019)</code></pre>
+<pre><code>## spec_tbl_df [1,640,718 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ride_id           : num [1:1640718] 23479388 23479389 23479390 23479391 23479392 ...
+##  $ started_at        : POSIXct[1:1640718], format: &quot;2019-07-01 00:00:27&quot; &quot;2019-07-01 00:01:16&quot; ...
+##  $ ended_at          : POSIXct[1:1640718], format: &quot;2019-07-01 00:20:41&quot; &quot;2019-07-01 00:18:44&quot; ...
+##  $ rideable_type     : num [1:1640718] 3591 5353 6180 5540 6014 ...
+##  $ tripduration      : num [1:1640718] 1214 1048 1554 1503 1213 ...
+##  $ start_station_id  : num [1:1640718] 117 381 313 313 168 300 168 313 43 43 ...
+##  $ start_station_name: chr [1:1640718] &quot;Wilton Ave &amp; Belmont Ave&quot; &quot;Western Ave &amp; Monroe St&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; ...
+##  $ end_station_id    : num [1:1640718] 497 203 144 144 62 232 62 144 195 195 ...
+##  $ end_station_name  : chr [1:1640718] &quot;Kimball Ave &amp; Belmont Ave&quot; &quot;Western Ave &amp; 21st St&quot; &quot;Larrabee St &amp; Webster Ave&quot; &quot;Larrabee St &amp; Webster Ave&quot; ...
+##  $ member_casual     : chr [1:1640718] &quot;Subscriber&quot; &quot;Customer&quot; &quot;Customer&quot; &quot;Customer&quot; ...
+##  $ gender            : chr [1:1640718] &quot;Male&quot; NA NA NA ...
+##  $ birthyear         : num [1:1640718] 1992 NA NA NA NA ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   trip_id = col_double(),
+##   ..   start_time = col_datetime(format = &quot;&quot;),
+##   ..   end_time = col_datetime(format = &quot;&quot;),
+##   ..   bikeid = col_double(),
+##   ..   tripduration = col_number(),
+##   ..   from_station_id = col_double(),
+##   ..   from_station_name = col_character(),
+##   ..   to_station_id = col_double(),
+##   ..   to_station_name = col_character(),
+##   ..   usertype = col_character(),
+##   ..   gender = col_character(),
+##   ..   birthyear = col_double()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code>str(Q2_2019)</code></pre>
+<pre><code>## spec_tbl_df [1,108,163 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+##  $ ride_id                                         : num [1:1108163] 22178529 22178530 22178531 22178532 22178533 ...
+##  $ started_at                                      : POSIXct[1:1108163], format: &quot;2019-04-01 00:02:22&quot; &quot;2019-04-01 00:03:02&quot; ...
+##  $ ended_at                                        : POSIXct[1:1108163], format: &quot;2019-04-01 00:09:48&quot; &quot;2019-04-01 00:20:30&quot; ...
+##  $ rideable_type                                   : num [1:1108163] 6251 6226 5649 4151 3270 ...
+##  $ 01 - Rental Details Duration In Seconds Uncapped: num [1:1108163] 446 1048 252 357 1007 ...
+##  $ start_station_id                                : num [1:1108163] 81 317 283 26 202 420 503 260 211 211 ...
+##  $ start_station_name                              : chr [1:1108163] &quot;Daley Center Plaza&quot; &quot;Wood St &amp; Taylor St&quot; &quot;LaSalle St &amp; Jackson Blvd&quot; &quot;McClurg Ct &amp; Illinois St&quot; ...
+##  $ end_station_id                                  : num [1:1108163] 56 59 174 133 129 426 500 499 211 211 ...
+##  $ end_station_name                                : chr [1:1108163] &quot;Desplaines St &amp; Kinzie St&quot; &quot;Wabash Ave &amp; Roosevelt Rd&quot; &quot;Canal St &amp; Madison St&quot; &quot;Kingsbury St &amp; Kinzie St&quot; ...
+##  $ member_casual                                   : chr [1:1108163] &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; ...
+##  $ Member Gender                                   : chr [1:1108163] &quot;Male&quot; &quot;Female&quot; &quot;Male&quot; &quot;Male&quot; ...
+##  $ 05 - Member Details Member Birthday Year        : num [1:1108163] 1975 1984 1990 1993 1992 ...
+##  - attr(*, &quot;spec&quot;)=
+##   .. cols(
+##   ..   `01 - Rental Details Rental ID` = col_double(),
+##   ..   `01 - Rental Details Local Start Time` = col_datetime(format = &quot;&quot;),
+##   ..   `01 - Rental Details Local End Time` = col_datetime(format = &quot;&quot;),
+##   ..   `01 - Rental Details Bike ID` = col_double(),
+##   ..   `01 - Rental Details Duration In Seconds Uncapped` = col_number(),
+##   ..   `03 - Rental Start Station ID` = col_double(),
+##   ..   `03 - Rental Start Station Name` = col_character(),
+##   ..   `02 - Rental End Station ID` = col_double(),
+##   ..   `02 - Rental End Station Name` = col_character(),
+##   ..   `User Type` = col_character(),
+##   ..   `Member Gender` = col_character(),
+##   ..   `05 - Member Details Member Birthday Year` = col_double()
+##   .. )
+##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
+</div>
 </div>
 
 

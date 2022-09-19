@@ -24,3 +24,99 @@ Customers who purchase annual memberships are Cyclistic members.
 Since the annual membership is the most profitable, the company's director 
 of marketing suggests that increasing the number of annual memberships 
 is key to future growth.
+
+The data used for the analysis are taken from
+[divvy-tripdata](https://divvy-tripdata.s3.amazonaws.com/index.html) 
+opensource data. The use of these data is licensed under this
+[license](https://www.divvybikes.com/data-license-agreement).
+
+## Data cleaning
+
+Loading esseantial libraries:
+```{r}
+library("tidyverse")
+```
+
+To perform the required analysis I'm going to be using the data from 
+the last 4 quarters; Q2, Q3 and Q4 of 2019 and Q1 of 2020.
+
+```{r}
+Q2_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q2.csv',
+           show_col_types = FALSE)
+Q3_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q3.csv',
+           show_col_types = FALSE)
+Q4_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q4.csv',
+           show_col_types = FALSE)
+Q1_2020 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2020_Q1.csv',
+           show_col_types = FALSE)
+```
+
+Let's start to clean data. Since we have to work with four different files 
+it is first important to have consistent column namings. 
+We can check how are the columns named in each file running these commands
+
+```{r, results="hide"}
+colnames(Q2_2019)
+colnames(Q3_2019)
+colnames(Q4_2019)
+colnames(Q1_2020)
+```
+
+The files do not have all the same columns
+but they share a total of nine columns. These are the columns we are going 
+to merge and they need to have the same exact name.
+The shared columns are: _ride_id, rideable_type, started_at, ended_at, start_station_name,_
+_start_station_id, end_station_name, end_station_id_ and _member_casual_,
+following the namings used in Q1_2020.
+
+```{r, include=FALSE}
+(Q4_2019 <- rename(Q4_2019
+                   ,ride_id = trip_id
+                   ,rideable_type = bikeid 
+                   ,started_at = start_time  
+                   ,ended_at = end_time  
+                   ,start_station_name = from_station_name 
+                   ,start_station_id = from_station_id 
+                   ,end_station_name = to_station_name 
+                   ,end_station_id = to_station_id 
+                   ,member_casual = usertype))
+
+(Q3_2019 <- rename(Q3_2019
+                   ,ride_id = trip_id
+                   ,rideable_type = bikeid 
+                   ,started_at = start_time  
+                   ,ended_at = end_time  
+                   ,start_station_name = from_station_name 
+                   ,start_station_id = from_station_id 
+                   ,end_station_name = to_station_name 
+                   ,end_station_id = to_station_id 
+                   ,member_casual = usertype))
+
+(Q2_2019 <- rename(Q2_2019
+                   ,ride_id = "01 - Rental Details Rental ID"
+                   ,rideable_type = "01 - Rental Details Bike ID" 
+                   ,started_at = "01 - Rental Details Local Start Time"  
+                   ,ended_at = "01 - Rental Details Local End Time"  
+                   ,start_station_name = "03 - Rental Start Station Name" 
+                   ,start_station_id = "03 - Rental Start Station ID"
+                   ,end_station_name = "02 - Rental End Station Name" 
+                   ,end_station_id = "02 - Rental End Station ID"
+                   ,member_casual = "User Type"))
+
+```
+
+
+
+```{r}
+str(Q1_2020)
+str(Q4_2019)
+str(Q3_2019)
+str(Q2_2019)
+```
+
+
+
