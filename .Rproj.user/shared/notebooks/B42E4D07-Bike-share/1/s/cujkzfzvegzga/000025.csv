@@ -1,0 +1,5 @@
+"0","sum(trips$start_station_name == ""HQ QR"") > sum(trips$ride_length <= 0)"
+"1","[1]"
+"1"," TRUE"
+"1","
+"

@@ -1,0 +1,21 @@
+"0","Q2_2019 <- "
+"0","  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q2.csv',"
+"0","           show_col_types = FALSE)"
+"0","Q3_2019 <- "
+"0","  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q3.csv',"
+"0","           show_col_types = FALSE)"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"2","Warning in doTryCatch(return(expr), name, parentenv, handler) :"
+"2","
+ "
+"2"," restarting interrupted promise evaluation
+"
+"0","Q4_2019 <- "
+"0","  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q4.csv',"
+"0","           show_col_types = FALSE)"
+"0","Q1_2020 <- "
+"0","  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2020_Q1.csv',"
+"0","           show_col_types = FALSE)"

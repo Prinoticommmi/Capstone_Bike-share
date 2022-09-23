@@ -1,0 +1,31 @@
+{
+    "id": "AF08F100",
+    "path": "~/GitHub/Capstone_Bike-share/Bike-share.Rmd",
+    "project_path": "Bike-share.Rmd",
+    "type": "r_markdown",
+    "hash": "1413935039",
+    "contents": "",
+    "dirty": false,
+    "created": 1663590213193.0,
+    "source_on_save": true,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "247,11",
+        "scrollLine": "225",
+        "rmdVisualMode": "false",
+        "rmdVisualWrapConfigured": "true",
+        "docOutlineVisible": "1",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "2:0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1663924767,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1663924767018,
+    "read_only": false,
+    "read_only_alternatives": []
+}

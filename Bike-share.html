@@ -388,8 +388,8 @@ director of marketing suggests that increasing the number of annual
 memberships is key to future growth.</p>
 <p>The data used for the analysis are taken from <a href="https://divvy-tripdata.s3.amazonaws.com/index.html">divvy-tripdata</a>
 opensource data. The use of these data is licensed under this <a href="https://www.divvybikes.com/data-license-agreement">license</a>.</p>
-<div id="data-cleaning" class="section level2">
-<h2>Data cleaning</h2>
+<div id="data-preparation" class="section level2">
+<h2>Data Preparation</h2>
 <p>Loading esseantial libraries:</p>
 <pre class="r"><code>library(&quot;tidyverse&quot;)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
@@ -400,6 +400,8 @@ opensource data. The use of these data is licensed under this <a href="https://w
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(&quot;arsenal&quot;)
+library(&quot;dplyr&quot;)</code></pre>
 <p>To perform the required analysis I’m going to be using the data from
 the last 4 quarters; Q2, Q3 and Q4 of 2019 and Q1 of 2020.</p>
 <pre class="r"><code>Q2_2019 &lt;- 
@@ -417,138 +419,209 @@ Q1_2020 &lt;-
 <p>Let’s start to clean data. Since we have to work with four different
 files it is first important to have consistent column namings. We can
 check how are the columns named in each file running these commands</p>
-<pre class="r"><code>colnames(Q2_2019)
-colnames(Q3_2019)
-colnames(Q4_2019)
-colnames(Q1_2020)</code></pre>
-<p>The files do not have all the same columns but they share a total of
-nine columns. These are the columns we are going to merge and they need
-to have the same exact name. The shared columns are: <em>ride_id,
-rideable_type, started_at, ended_at, start_station_name,</em>
-<em>start_station_id, end_station_name, end_station_id</em> and
-<em>member_casual</em>, following the namings used in Q1_2020.</p>
-<pre class="r"><code>str(Q1_2020)</code></pre>
-<pre><code>## spec_tbl_df [426,887 × 13] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ ride_id           : chr [1:426887] &quot;EACB19130B0CDA4A&quot; &quot;8FED874C809DC021&quot; &quot;789F3C21E472CA96&quot; &quot;C9A388DAC6ABF313&quot; ...
-##  $ rideable_type     : chr [1:426887] &quot;docked_bike&quot; &quot;docked_bike&quot; &quot;docked_bike&quot; &quot;docked_bike&quot; ...
-##  $ started_at        : POSIXct[1:426887], format: &quot;2020-01-21 20:06:59&quot; &quot;2020-01-30 14:22:39&quot; ...
-##  $ ended_at          : POSIXct[1:426887], format: &quot;2020-01-21 20:14:30&quot; &quot;2020-01-30 14:26:22&quot; ...
-##  $ start_station_name: chr [1:426887] &quot;Western Ave &amp; Leland Ave&quot; &quot;Clark St &amp; Montrose Ave&quot; &quot;Broadway &amp; Belmont Ave&quot; &quot;Clark St &amp; Randolph St&quot; ...
-##  $ start_station_id  : num [1:426887] 239 234 296 51 66 212 96 96 212 38 ...
-##  $ end_station_name  : chr [1:426887] &quot;Clark St &amp; Leland Ave&quot; &quot;Southport Ave &amp; Irving Park Rd&quot; &quot;Wilton Ave &amp; Belmont Ave&quot; &quot;Fairbanks Ct &amp; Grand Ave&quot; ...
-##  $ end_station_id    : num [1:426887] 326 318 117 24 212 96 212 212 96 100 ...
-##  $ start_lat         : num [1:426887] 42 42 41.9 41.9 41.9 ...
-##  $ start_lng         : num [1:426887] -87.7 -87.7 -87.6 -87.6 -87.6 ...
-##  $ end_lat           : num [1:426887] 42 42 41.9 41.9 41.9 ...
-##  $ end_lng           : num [1:426887] -87.7 -87.7 -87.7 -87.6 -87.6 ...
-##  $ member_casual     : chr [1:426887] &quot;member&quot; &quot;member&quot; &quot;member&quot; &quot;member&quot; ...
-##  - attr(*, &quot;spec&quot;)=
-##   .. cols(
-##   ..   ride_id = col_character(),
-##   ..   rideable_type = col_character(),
-##   ..   started_at = col_datetime(format = &quot;&quot;),
-##   ..   ended_at = col_datetime(format = &quot;&quot;),
-##   ..   start_station_name = col_character(),
-##   ..   start_station_id = col_double(),
-##   ..   end_station_name = col_character(),
-##   ..   end_station_id = col_double(),
-##   ..   start_lat = col_double(),
-##   ..   start_lng = col_double(),
-##   ..   end_lat = col_double(),
-##   ..   end_lng = col_double(),
-##   ..   member_casual = col_character()
-##   .. )
-##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
-<pre class="r"><code>str(Q4_2019)</code></pre>
-<pre><code>## spec_tbl_df [704,054 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ ride_id           : num [1:704054] 25223640 25223641 25223642 25223643 25223644 ...
-##  $ started_at        : POSIXct[1:704054], format: &quot;2019-10-01 00:01:39&quot; &quot;2019-10-01 00:02:16&quot; ...
-##  $ ended_at          : POSIXct[1:704054], format: &quot;2019-10-01 00:17:20&quot; &quot;2019-10-01 00:06:34&quot; ...
-##  $ rideable_type     : num [1:704054] 2215 6328 3003 3275 5294 ...
-##  $ tripduration      : num [1:704054] 940 258 850 2350 1867 ...
-##  $ start_station_id  : num [1:704054] 20 19 84 313 210 156 84 156 156 336 ...
-##  $ start_station_name: chr [1:704054] &quot;Sheffield Ave &amp; Kingsbury St&quot; &quot;Throop (Loomis) St &amp; Taylor St&quot; &quot;Milwaukee Ave &amp; Grand Ave&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; ...
-##  $ end_station_id    : num [1:704054] 309 241 199 290 382 226 142 463 463 336 ...
-##  $ end_station_name  : chr [1:704054] &quot;Leavitt St &amp; Armitage Ave&quot; &quot;Morgan St &amp; Polk St&quot; &quot;Wabash Ave &amp; Grand Ave&quot; &quot;Kedzie Ave &amp; Palmer Ct&quot; ...
-##  $ member_casual     : chr [1:704054] &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; ...
-##  $ gender            : chr [1:704054] &quot;Male&quot; &quot;Male&quot; &quot;Female&quot; &quot;Male&quot; ...
-##  $ birthyear         : num [1:704054] 1987 1998 1991 1990 1987 ...
-##  - attr(*, &quot;spec&quot;)=
-##   .. cols(
-##   ..   trip_id = col_double(),
-##   ..   start_time = col_datetime(format = &quot;&quot;),
-##   ..   end_time = col_datetime(format = &quot;&quot;),
-##   ..   bikeid = col_double(),
-##   ..   tripduration = col_number(),
-##   ..   from_station_id = col_double(),
-##   ..   from_station_name = col_character(),
-##   ..   to_station_id = col_double(),
-##   ..   to_station_name = col_character(),
-##   ..   usertype = col_character(),
-##   ..   gender = col_character(),
-##   ..   birthyear = col_double()
-##   .. )
-##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
-<pre class="r"><code>str(Q3_2019)</code></pre>
-<pre><code>## spec_tbl_df [1,640,718 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ ride_id           : num [1:1640718] 23479388 23479389 23479390 23479391 23479392 ...
-##  $ started_at        : POSIXct[1:1640718], format: &quot;2019-07-01 00:00:27&quot; &quot;2019-07-01 00:01:16&quot; ...
-##  $ ended_at          : POSIXct[1:1640718], format: &quot;2019-07-01 00:20:41&quot; &quot;2019-07-01 00:18:44&quot; ...
-##  $ rideable_type     : num [1:1640718] 3591 5353 6180 5540 6014 ...
-##  $ tripduration      : num [1:1640718] 1214 1048 1554 1503 1213 ...
-##  $ start_station_id  : num [1:1640718] 117 381 313 313 168 300 168 313 43 43 ...
-##  $ start_station_name: chr [1:1640718] &quot;Wilton Ave &amp; Belmont Ave&quot; &quot;Western Ave &amp; Monroe St&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; &quot;Lakeview Ave &amp; Fullerton Pkwy&quot; ...
-##  $ end_station_id    : num [1:1640718] 497 203 144 144 62 232 62 144 195 195 ...
-##  $ end_station_name  : chr [1:1640718] &quot;Kimball Ave &amp; Belmont Ave&quot; &quot;Western Ave &amp; 21st St&quot; &quot;Larrabee St &amp; Webster Ave&quot; &quot;Larrabee St &amp; Webster Ave&quot; ...
-##  $ member_casual     : chr [1:1640718] &quot;Subscriber&quot; &quot;Customer&quot; &quot;Customer&quot; &quot;Customer&quot; ...
-##  $ gender            : chr [1:1640718] &quot;Male&quot; NA NA NA ...
-##  $ birthyear         : num [1:1640718] 1992 NA NA NA NA ...
-##  - attr(*, &quot;spec&quot;)=
-##   .. cols(
-##   ..   trip_id = col_double(),
-##   ..   start_time = col_datetime(format = &quot;&quot;),
-##   ..   end_time = col_datetime(format = &quot;&quot;),
-##   ..   bikeid = col_double(),
-##   ..   tripduration = col_number(),
-##   ..   from_station_id = col_double(),
-##   ..   from_station_name = col_character(),
-##   ..   to_station_id = col_double(),
-##   ..   to_station_name = col_character(),
-##   ..   usertype = col_character(),
-##   ..   gender = col_character(),
-##   ..   birthyear = col_double()
-##   .. )
-##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
-<pre class="r"><code>str(Q2_2019)</code></pre>
-<pre><code>## spec_tbl_df [1,108,163 × 12] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-##  $ ride_id                                         : num [1:1108163] 22178529 22178530 22178531 22178532 22178533 ...
-##  $ started_at                                      : POSIXct[1:1108163], format: &quot;2019-04-01 00:02:22&quot; &quot;2019-04-01 00:03:02&quot; ...
-##  $ ended_at                                        : POSIXct[1:1108163], format: &quot;2019-04-01 00:09:48&quot; &quot;2019-04-01 00:20:30&quot; ...
-##  $ rideable_type                                   : num [1:1108163] 6251 6226 5649 4151 3270 ...
-##  $ 01 - Rental Details Duration In Seconds Uncapped: num [1:1108163] 446 1048 252 357 1007 ...
-##  $ start_station_id                                : num [1:1108163] 81 317 283 26 202 420 503 260 211 211 ...
-##  $ start_station_name                              : chr [1:1108163] &quot;Daley Center Plaza&quot; &quot;Wood St &amp; Taylor St&quot; &quot;LaSalle St &amp; Jackson Blvd&quot; &quot;McClurg Ct &amp; Illinois St&quot; ...
-##  $ end_station_id                                  : num [1:1108163] 56 59 174 133 129 426 500 499 211 211 ...
-##  $ end_station_name                                : chr [1:1108163] &quot;Desplaines St &amp; Kinzie St&quot; &quot;Wabash Ave &amp; Roosevelt Rd&quot; &quot;Canal St &amp; Madison St&quot; &quot;Kingsbury St &amp; Kinzie St&quot; ...
-##  $ member_casual                                   : chr [1:1108163] &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; &quot;Subscriber&quot; ...
-##  $ Member Gender                                   : chr [1:1108163] &quot;Male&quot; &quot;Female&quot; &quot;Male&quot; &quot;Male&quot; ...
-##  $ 05 - Member Details Member Birthday Year        : num [1:1108163] 1975 1984 1990 1993 1992 ...
-##  - attr(*, &quot;spec&quot;)=
-##   .. cols(
-##   ..   `01 - Rental Details Rental ID` = col_double(),
-##   ..   `01 - Rental Details Local Start Time` = col_datetime(format = &quot;&quot;),
-##   ..   `01 - Rental Details Local End Time` = col_datetime(format = &quot;&quot;),
-##   ..   `01 - Rental Details Bike ID` = col_double(),
-##   ..   `01 - Rental Details Duration In Seconds Uncapped` = col_number(),
-##   ..   `03 - Rental Start Station ID` = col_double(),
-##   ..   `03 - Rental Start Station Name` = col_character(),
-##   ..   `02 - Rental End Station ID` = col_double(),
-##   ..   `02 - Rental End Station Name` = col_character(),
-##   ..   `User Type` = col_character(),
-##   ..   `Member Gender` = col_character(),
-##   ..   `05 - Member Details Member Birthday Year` = col_double()
-##   .. )
-##  - attr(*, &quot;problems&quot;)=&lt;externalptr&gt;</code></pre>
+<pre class="r"><code>colnames(Q2_2019)</code></pre>
+<pre><code>##  [1] &quot;01 - Rental Details Rental ID&quot;                   
+##  [2] &quot;01 - Rental Details Local Start Time&quot;            
+##  [3] &quot;01 - Rental Details Local End Time&quot;              
+##  [4] &quot;01 - Rental Details Bike ID&quot;                     
+##  [5] &quot;01 - Rental Details Duration In Seconds Uncapped&quot;
+##  [6] &quot;03 - Rental Start Station ID&quot;                    
+##  [7] &quot;03 - Rental Start Station Name&quot;                  
+##  [8] &quot;02 - Rental End Station ID&quot;                      
+##  [9] &quot;02 - Rental End Station Name&quot;                    
+## [10] &quot;User Type&quot;                                       
+## [11] &quot;Member Gender&quot;                                   
+## [12] &quot;05 - Member Details Member Birthday Year&quot;</code></pre>
+<pre class="r"><code>colnames(Q3_2019)</code></pre>
+<pre><code>##  [1] &quot;trip_id&quot;           &quot;start_time&quot;        &quot;end_time&quot;         
+##  [4] &quot;bikeid&quot;            &quot;tripduration&quot;      &quot;from_station_id&quot;  
+##  [7] &quot;from_station_name&quot; &quot;to_station_id&quot;     &quot;to_station_name&quot;  
+## [10] &quot;usertype&quot;          &quot;gender&quot;            &quot;birthyear&quot;</code></pre>
+<pre class="r"><code>colnames(Q4_2019)</code></pre>
+<pre><code>##  [1] &quot;trip_id&quot;           &quot;start_time&quot;        &quot;end_time&quot;         
+##  [4] &quot;bikeid&quot;            &quot;tripduration&quot;      &quot;from_station_id&quot;  
+##  [7] &quot;from_station_name&quot; &quot;to_station_id&quot;     &quot;to_station_name&quot;  
+## [10] &quot;usertype&quot;          &quot;gender&quot;            &quot;birthyear&quot;</code></pre>
+<pre class="r"><code>colnames(Q1_2020)</code></pre>
+<pre><code>##  [1] &quot;ride_id&quot;            &quot;rideable_type&quot;      &quot;started_at&quot;        
+##  [4] &quot;ended_at&quot;           &quot;start_station_name&quot; &quot;start_station_id&quot;  
+##  [7] &quot;end_station_name&quot;   &quot;end_station_id&quot;     &quot;start_lat&quot;         
+## [10] &quot;start_lng&quot;          &quot;end_lat&quot;            &quot;end_lng&quot;           
+## [13] &quot;member_casual&quot;</code></pre>
+<p>These files do not have all the same column names but they share a
+total of nine columns, that are: <strong>ride_id</strong>,
+<strong>rideable_type</strong>, <strong>started_at</strong>,
+<strong>ended_at</strong>, <strong>start_station_name</strong>,
+<strong>start_station_id</strong>, <strong>end_station_name</strong>,
+<strong>end_station_id</strong> and <strong>member_casual</strong>,
+according to the namings used in the dataset Q1_2020.</p>
+<p>In order to use these dataframes more easily in this step I create
+four new dataframes which contain only the columns they have in
+common,</p>
+<pre class="r"><code>Q1_2020_clean &lt;- Q1_2020[-c(9,10,11,12)]
+Q4_2019_clean &lt;- Q4_2019[-c(5,11,12)]
+Q3_2019_clean &lt;- Q3_2019[-c(5,11,12)]
+Q2_2019_clean &lt;- Q2_2019[-c(5,11,12)]</code></pre>
+<p>and I reorganize the columns in alphabetical order for a better
+comparison.</p>
+<pre class="r"><code>Q1_2020_clean &lt;- Q1_2020_clean %&gt;% select(order(colnames(Q1_2020_clean)))
+Q4_2019_clean &lt;- Q4_2019_clean %&gt;% select(order(colnames(Q4_2019_clean)))
+Q3_2019_clean &lt;- Q3_2019_clean %&gt;% select(order(colnames(Q3_2019_clean)))
+Q2_2019_clean &lt;- Q2_2019_clean %&gt;% select(order(colnames(Q2_2019_clean)))</code></pre>
+<p>Now we have to check that the attributes have consistent types. For
+this we can use the str() function from the dplyr package.</p>
+<pre class="r"><code>str(Q1_2020_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)</code></pre>
+<pre><code>## tibble [426,887 × 9] (S3: tbl_df/tbl/data.frame)
+##  $ end_station_id    : num  NULL ...
+##  $ end_station_name  : chr   ...
+##  $ ended_at          : POSIXct, format:  ...
+##  $ member_casual     : chr   ...
+##  $ ride_id           : chr   ...
+##  $ rideable_type     : chr   ...
+##  $ start_station_id  : num  NULL ...
+##  $ start_station_name: chr   ...
+##  $ started_at        : POSIXct, format:  ...</code></pre>
+<pre class="r"><code>str(Q4_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)</code></pre>
+<pre><code>## tibble [704,054 × 9] (S3: tbl_df/tbl/data.frame)
+##  $ end_station_id    : num  NULL ...
+##  $ end_station_name  : chr   ...
+##  $ ended_at          : POSIXct, format:  ...
+##  $ member_casual     : chr   ...
+##  $ ride_id           : num  NULL ...
+##  $ rideable_type     : num  NULL ...
+##  $ start_station_id  : num  NULL ...
+##  $ start_station_name: chr   ...
+##  $ started_at        : POSIXct, format:  ...</code></pre>
+<pre class="r"><code>str(Q3_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)</code></pre>
+<pre><code>## tibble [1,640,718 × 9] (S3: tbl_df/tbl/data.frame)
+##  $ end_station_id    : num  NULL ...
+##  $ end_station_name  : chr   ...
+##  $ ended_at          : POSIXct, format:  ...
+##  $ member_casual     : chr   ...
+##  $ ride_id           : num  NULL ...
+##  $ rideable_type     : num  NULL ...
+##  $ start_station_id  : num  NULL ...
+##  $ start_station_name: chr   ...
+##  $ started_at        : POSIXct, format:  ...</code></pre>
+<pre class="r"><code>str(Q2_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)</code></pre>
+<pre><code>## tibble [1,108,163 × 9] (S3: tbl_df/tbl/data.frame)
+##  $ end_station_id    : num  NULL ...
+##  $ end_station_name  : chr   ...
+##  $ ended_at          : POSIXct, format:  ...
+##  $ member_casual     : chr   ...
+##  $ ride_id           : num  NULL ...
+##  $ rideable_type     : num  NULL ...
+##  $ start_station_id  : num  NULL ...
+##  $ start_station_name: chr   ...
+##  $ started_at        : POSIXct, format:  ...</code></pre>
+<p>From the output is clear that the type of the columns
+<strong>ride_id</strong> and <strong>rideable_type</strong> from the
+<em>Q1_2020</em> is different from the other datasets. <em>Q1_2020</em>
+is char instead of numerical. Let’s convert these columns type into
+char.</p>
+<pre class="r"><code>Q4_2019_clean &lt;-  mutate(Q4_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))
+Q3_2019_clean &lt;-  mutate(Q3_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))
+Q2_2019_clean &lt;-  mutate(Q2_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))</code></pre>
+<p>We are now ready to merge these four datasets into one.</p>
+<pre class="r"><code>trips &lt;- bind_rows(Q2_2019_clean, Q3_2019_clean, Q4_2019_clean, Q1_2020_clean)</code></pre>
+</div>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<p>The next step is to clean our dataset <strong>trips</strong>. Let’s
+inspect the dataset. The first thing to check is if the column
+<strong>member_casual</strong> present any inconsistencies. Let’s check
+what values the attributes have,</p>
+<pre class="r"><code>unique(trips[&quot;member_casual&quot;])</code></pre>
+<pre><code>## # A tibble: 4 × 1
+##   member_casual
+##   &lt;chr&gt;        
+## 1 Subscriber   
+## 2 Customer     
+## 3 member       
+## 4 casual</code></pre>
+<p>The four values <strong>Subscriber</strong>,
+<strong>Customer</strong>, <strong>member</strong> and
+<strong>casual</strong> have to be mapped into only two values. To this
+end let’s map <strong>member</strong> –&gt; <strong>Subscriber</strong>
+and <strong>casual</strong> –&gt; <strong>Customer</strong>.</p>
+<pre class="r"><code>trips &lt;-  trips %&gt;% 
+  mutate(member_casual = recode(member_casual
+                           ,&quot;Subscriber&quot; = &quot;member&quot;
+                           ,&quot;Customer&quot; = &quot;casual&quot;))</code></pre>
+<p>Next let’s add a new colum in order to have a better data aggregation
+such as splitting the date of a ride into <em>day-month-year</em>.</p>
+<pre class="r"><code>trips$date &lt;- as.Date(trips$started_at)
+trips$month &lt;- format(as.Date(trips$date), &quot;%m&quot;)
+trips$day &lt;- format(as.Date(trips$date), &quot;%d&quot;)
+trips$year &lt;- format(as.Date(trips$date), &quot;%Y&quot;)
+trips$day_of_week &lt;- format(as.Date(trips$date), &quot;%A&quot;)</code></pre>
+<p>Finally, let’s add other columns that indicates the duration of a
+trip. This can give insights on how customers with different memberships
+use the bike-sharing service.</p>
+<pre class="r"><code>trips$ride_length &lt;- difftime(trips$ended_at,trips$started_at) # Given in seconds
+str(trips$ride_length) # Let&#39;s inspect the newly created attributes</code></pre>
+<pre><code>##  &#39;difftime&#39; num [1:3879822] 446 1048 252 357 ...
+##  - attr(*, &quot;units&quot;)= chr &quot;secs&quot;</code></pre>
+<p>The <strong>ride_length</strong> has a <em>char</em> type. To make
+calculation with these attributes we have to cast them into numeric and
+check that the values are all bigger then 0.</p>
+<pre class="r"><code>trips$ride_length &lt;- as.numeric(as.character(trips$ride_length)) # Convert to numeric
+sum(trips$ride_length &lt;= 0)</code></pre>
+<pre><code>## [1] 223</code></pre>
+<p>Let’s check the other attributes for trips with a negative
+duration,</p>
+<pre class="r"><code>head(filter(trips,ride_length&lt;0))</code></pre>
+<pre><code>## # A tibble: 6 × 15
+##   end_stat…¹ end_s…² ended_at            membe…³ ride_id ridea…⁴ start…⁵ start…⁶
+##        &lt;dbl&gt; &lt;chr&gt;   &lt;dttm&gt;              &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;  
+## 1        133 Kingsb… 2019-11-03 01:09:56 casual  256258… 4141        632 Clark …
+## 2        498 Califo… 2019-11-03 01:10:44 casual  256258… 6329        373 Kedzie…
+## 3         87 Racine… 2019-11-03 01:02:40 member  256258… 964         229 Southp…
+## 4        131 Lincol… 2019-11-03 01:16:48 member  256258… 2214        131 Lincol…
+## 5        258 Logan … 2019-11-03 01:04:25 member  256258… 4179        298 Lincol…
+## 6        238 Wolcot… 2019-11-03 01:03:02 member  256258… 2920        460 Clark …
+## # … with 7 more variables: started_at &lt;dttm&gt;, date &lt;date&gt;, month &lt;chr&gt;,
+## #   day &lt;chr&gt;, year &lt;chr&gt;, day_of_week &lt;chr&gt;, ride_length &lt;dbl&gt;, and
+## #   abbreviated variable names ¹​end_station_id, ²​end_station_name,
+## #   ³​member_casual, ⁴​rideable_type, ⁵​start_station_id, ⁶​start_station_name</code></pre>
+<pre class="r"><code>tail(filter(trips,ride_length&lt;0))</code></pre>
+<pre><code>## # A tibble: 6 × 15
+##   end_stat…¹ end_s…² ended_at            membe…³ ride_id ridea…⁴ start…⁵ start…⁶
+##        &lt;dbl&gt; &lt;chr&gt;   &lt;dttm&gt;              &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;  
+## 1        675 HQ QR   2020-03-18 09:16:35 casual  CA4958… docked…     675 HQ QR  
+## 2        675 HQ QR   2020-03-18 15:12:04 casual  C2F71E… docked…     675 HQ QR  
+## 3        675 HQ QR   2020-03-13 08:38:03 casual  14AF58… docked…     675 HQ QR  
+## 4        675 HQ QR   2020-03-19 10:24:05 casual  D94EF1… docked…     675 HQ QR  
+## 5        675 HQ QR   2020-03-13 08:51:34 casual  323CAC… docked…     675 HQ QR  
+## 6        675 HQ QR   2020-03-19 09:31:45 casual  476717… docked…     675 HQ QR  
+## # … with 7 more variables: started_at &lt;dttm&gt;, date &lt;date&gt;, month &lt;chr&gt;,
+## #   day &lt;chr&gt;, year &lt;chr&gt;, day_of_week &lt;chr&gt;, ride_length &lt;dbl&gt;, and
+## #   abbreviated variable names ¹​end_station_id, ²​end_station_name,
+## #   ³​member_casual, ⁴​rideable_type, ⁵​start_station_id, ⁶​start_station_name</code></pre>
+<p>Some of them have the <strong>starting_station_name = HQ QR</strong>
+that is the head quarter where a bike has been brought for being
+repaired. Since these attributes fo not correspond to any customer it is
+necessary to remove them as well. We can also check that there are other
+trips with a positive duration that started at the station <strong>HQ
+QR</strong>,</p>
+<pre class="r"><code>sum(trips$start_station_name == &quot;HQ QR&quot;) &gt; sum(trips$ride_length &lt;= 0)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>Let’s remove all the entries where
+<strong>start_station_name</strong> == “HQ QR” and
+<strong>ride_length</strong> &lt;= 0.</p>
+<pre class="r"><code>trips_clean &lt;- trips[!(trips$start_station_name == &quot;HQ QR&quot; | trips$ride_length&lt;0),]
+sum(trips_clean$start_station_name == &quot;HQ QR&quot;) # Check that the entries have been removed</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sum(trips_clean$ride_length &lt;= 0) # Check that the entries have been removed</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>This step concludes the cleaning phase of the data analysis. Let’s
+move onto the analysis itself.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
 </div>
 </div>
 

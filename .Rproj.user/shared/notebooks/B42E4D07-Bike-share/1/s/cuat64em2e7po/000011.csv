@@ -1,0 +1,6 @@
+"0","trips$ride_length <- as.numeric(as.character(trips$ride_length)) # Convert to numeric"
+"0","sum(trips$ride_length <= 0)"
+"1","[1]"
+"1"," 223"
+"1","
+"

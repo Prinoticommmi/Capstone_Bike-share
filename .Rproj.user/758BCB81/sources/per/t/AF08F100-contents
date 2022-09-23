@@ -1,0 +1,271 @@
+# Case Study: How Does a Bike-Share Navigate Speedy Success?
+
+This project is about a fictional bike sharing company, _Cyclistic_, 
+that aim to maximize 
+the number of annual membership. 
+The idea is to analyse how casual riders and annual members use 
+Cyclistic bikes differently and understand how they can have the casual 
+riders to buy a membership.
+
+Cyclistic has more than 5,800 bicycles and 600 docking stations. 
+It sets itself apart by offering a very large selection of bikes, 
+especially they look at people with disabilities 
+and riders who can’t use a standard two-wheeled bike. 
+Statistically speaking, 92% of Cyclistic users use standard bikes,
+moreover, only about the 30% of the total number of users use them to
+commute to work each day.
+
+The company before this analysis has  very flexible pricing plans:
+single-ride passes, full-day passes, and annual memberships. 
+Customers who purchase single-ride or full-day passes 
+are referred to as casual riders. 
+Customers who purchase annual memberships are Cyclistic members.
+
+Since the annual membership is the most profitable, the company's director 
+of marketing suggests that increasing the number of annual memberships 
+is key to future growth.
+
+The data used for the analysis are taken from
+[divvy-tripdata](https://divvy-tripdata.s3.amazonaws.com/index.html) 
+opensource data. The use of these data is licensed under this
+[license](https://www.divvybikes.com/data-license-agreement).
+
+## Data Preparation
+
+Loading esseantial libraries:
+```{r}
+library("tidyverse")
+library("arsenal")
+library("dplyr")
+```
+
+To perform the required analysis I'm going to be using the data from 
+the last 4 quarters; Q2, Q3 and Q4 of 2019 and Q1 of 2020.
+
+```{r}
+Q2_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q2.csv',
+           show_col_types = FALSE)
+Q3_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q3.csv',
+           show_col_types = FALSE)
+Q4_2019 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2019_Q4.csv',
+           show_col_types = FALSE)
+Q1_2020 <- 
+  read_csv('C:\\Users\\er_vi\\Documents\\GitHub\\Capstone_Bike-share\\Data\\Divvy_Trips_2020_Q1.csv',
+           show_col_types = FALSE)
+```
+
+Let's start to clean data. Since we have to work with four different files 
+it is first important to have consistent column namings. 
+We can check how are the columns named in each file running these commands
+
+```{r}
+colnames(Q2_2019)
+colnames(Q3_2019)
+colnames(Q4_2019)
+colnames(Q1_2020)
+```
+
+
+These files do not have all the same column names
+but they share a total of nine columns, that are: **ride_id**, **rideable_type**, **started_at**, **ended_at**, **start_station_name**,
+**start_station_id**, **end_station_name**, **end_station_id** and **member_casual**,
+according to the namings used in the dataset Q1_2020.
+
+```{r, include=FALSE}
+(Q4_2019 <- rename(Q4_2019,
+                   ride_id = trip_id,
+                   rideable_type = bikeid,
+                   started_at = start_time, 
+                   ended_at = end_time,
+                   start_station_name = from_station_name,
+                   start_station_id = from_station_id,
+                   end_station_name = to_station_name,
+                   end_station_id = to_station_id,
+                   member_casual = usertype,
+                   trip_duration = tripduration,
+                   birth_year = birthyear))
+
+(Q3_2019 <- rename(Q3_2019,
+                   ride_id = trip_id,
+                   rideable_type = bikeid,
+                   started_at = start_time,  
+                   ended_at = end_time,  
+                   start_station_name = from_station_name, 
+                   start_station_id = from_station_id, 
+                   end_station_name = to_station_name, 
+                   end_station_id = to_station_id,
+                   member_casual = usertype,
+                   trip_duration = tripduration,
+                   birth_year = birthyear))
+
+(Q2_2019 <- rename(Q2_2019,
+                   ride_id = "01 - Rental Details Rental ID",
+                   rideable_type = "01 - Rental Details Bike ID",
+                   started_at = "01 - Rental Details Local Start Time",  
+                   ended_at = "01 - Rental Details Local End Time",  
+                   start_station_name = "03 - Rental Start Station Name", 
+                   start_station_id = "03 - Rental Start Station ID",
+                   end_station_name = "02 - Rental End Station Name", 
+                   end_station_id = "02 - Rental End Station ID",
+                   member_casual = "User Type",
+                   trip_duration = "01 - Rental Details Duration In Seconds Uncapped",
+                   birth_year = "05 - Member Details Member Birthday Year",
+                   gender = "Member Gender"))
+
+```
+
+In order to use these dataframes more easily in this step I create four new 
+dataframes which contain only the columns they have in common,
+
+```{r}
+Q1_2020_clean <- Q1_2020[-c(9,10,11,12)]
+Q4_2019_clean <- Q4_2019[-c(5,11,12)]
+Q3_2019_clean <- Q3_2019[-c(5,11,12)]
+Q2_2019_clean <- Q2_2019[-c(5,11,12)]
+```
+
+and I reorganize the columns in alphabetical order for a better comparison.
+
+```{r}
+Q1_2020_clean <- Q1_2020_clean %>% select(order(colnames(Q1_2020_clean)))
+Q4_2019_clean <- Q4_2019_clean %>% select(order(colnames(Q4_2019_clean)))
+Q3_2019_clean <- Q3_2019_clean %>% select(order(colnames(Q3_2019_clean)))
+Q2_2019_clean <- Q2_2019_clean %>% select(order(colnames(Q2_2019_clean)))
+```
+
+Now we have to check that the attributes have consistent types. 
+For this we can use the str() function from the dplyr package. 
+
+```{r}
+str(Q1_2020_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)
+str(Q4_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)
+str(Q3_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)
+str(Q2_2019_clean, give.attr = FALSE, give.length = FALSE, vec.len = 0)
+```
+
+From the output is clear that the type of the columns **ride_id** and **rideable_type** 
+from the _Q1_2020_ is different from the other datasets. _Q1_2020_ is char 
+instead of numerical. Let's convert these columns type into char.
+
+```{r}
+Q4_2019_clean <-  mutate(Q4_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))
+Q3_2019_clean <-  mutate(Q3_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))
+Q2_2019_clean <-  mutate(Q2_2019_clean, ride_id = as.character(ride_id)
+                   ,rideable_type = as.character(rideable_type))
+```
+
+We are now ready to merge these four datasets into one.
+
+```{r}
+trips <- bind_rows(Q2_2019_clean, Q3_2019_clean, Q4_2019_clean, Q1_2020_clean)
+```
+
+## Data Cleaning
+
+
+The next step is to clean our dataset **trips**. 
+Let's inspect the dataset. The first thing to check is if the column **member_casual**
+present any inconsistencies. Let's check what values the attributes
+have,
+
+```{r}
+unique(trips["member_casual"])
+```
+
+The four values **Subscriber**, **Customer**, **member** and **casual** have to 
+be mapped into only two values. 
+To this end let's map **member** --> **Subscriber** 
+and **casual** -->  **Customer**.
+
+```{r}
+trips <-  trips %>% 
+  mutate(member_casual = recode(member_casual
+                           ,"Subscriber" = "member"
+                           ,"Customer" = "casual"))
+```
+
+Next let's add a new colum in order to have a better data aggregation such 
+as splitting the date of a ride into _day-month-year_.
+
+```{r}
+trips$date <- as.Date(trips$started_at)
+trips$month <- format(as.Date(trips$date), "%m")
+trips$day <- format(as.Date(trips$date), "%d")
+trips$year <- format(as.Date(trips$date), "%Y")
+trips$day_of_week <- format(as.Date(trips$date), "%A")
+```
+
+Finally, let's add other columns that indicates the duration of a trip. 
+This can give insights on how customers with different memberships use the 
+bike-sharing service.
+
+```{r}
+trips$ride_length <- difftime(trips$ended_at,trips$started_at) # Given in seconds
+str(trips$ride_length) # Let's inspect the newly created attributes
+```
+
+The **ride_length** has a _char_ type. To make calculation with these attributes 
+we have to cast them into numeric and check that the values are all bigger then
+0.
+
+```{r}
+trips$ride_length <- as.numeric(as.character(trips$ride_length)) # Convert to numeric
+sum(trips$ride_length <= 0)
+```
+Let's check the other attributes for trips with a negative duration,
+
+```{r}
+head(filter(trips,ride_length<0))
+tail(filter(trips,ride_length<0))
+```
+
+Some of them have the **starting_station_name = HQ QR** that is the head quarter
+where a bike has been brought for being repaired. Since these attributes 
+fo not correspond to any customer it is necessary to remove them as well.
+We can also check that there are other trips with a positive duration that 
+started at the station **HQ QR**,
+
+```{r}
+sum(trips$start_station_name == "HQ QR") > sum(trips$ride_length <= 0)
+```
+Let's remove all the entries where **start_station_name** == "HQ QR" and 
+**ride_length** <= 0.
+
+```{r}
+trips_clean <- trips[!(trips$start_station_name == "HQ QR" | trips$ride_length<0),]
+sum(trips_clean$start_station_name == "HQ QR") # Check that the entries have been removed
+sum(trips_clean$ride_length <= 0) # Check that the entries have been removed
+```
+
+This step concludes the cleaning phase of the data analysis.
+Let's move onto the analysis itself.
+
+## Analysis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

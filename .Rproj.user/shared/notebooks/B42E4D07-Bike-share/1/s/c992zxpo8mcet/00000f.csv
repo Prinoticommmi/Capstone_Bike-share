@@ -1,0 +1,6 @@
+"0","Q4_2019_clean <-  mutate(Q4_2019_clean, ride_id = as.character(ride_id)"
+"0","                   ,rideable_type = as.character(rideable_type))"
+"0","Q3_2019_clean <-  mutate(Q3_2019_clean, ride_id = as.character(ride_id)"
+"0","                   ,rideable_type = as.character(rideable_type))"
+"0","Q2_2019_clean <-  mutate(Q2_2019_clean, ride_id = as.character(ride_id)"
+"0","                   ,rideable_type = as.character(rideable_type))"

@@ -1,0 +1,1 @@
+"0","head(filter(trips,ride_length<0))"
