@@ -37,6 +37,7 @@ Loading esseantial libraries:
 library("tidyverse")
 library("arsenal")
 library("dplyr")
+library("ggplot2")
 ```
 
 To perform the required analysis I'm going to be using the data from 
@@ -250,6 +251,22 @@ Let's move onto the analysis itself.
 
 
 
+```{r}
+trips_clean %>%
+  aggregate(ride_length ~ member_casual, FUN = mean)
+```
+
+
+
+```{r}
+trips_clean$cumulative_ride_length <- 1
+trips_clean %>%
+  filter(ride_length < 7200 & member_casual=="casual") %>%
+  arrange(ride_length) %>%
+    aggregate(cumulative_ride_length ~ ride_length, FUN = sum) %>%
+  ggplot(aes(x = ride_length, y = cumulative_ride_length)) +
+  geom_col(position = "dodge")
+```
 
 
 
